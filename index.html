@@ -54,6 +54,14 @@
       <input id="suName" class="field" placeholder="Full name" required>
       <input id="suUsername" class="field" type="email" placeholder="Email address" autocapitalize="none" required>
       <input id="suPin" class="field" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN" required>
+      <div class="muted" style="background:var(--g);border:1px solid var(--dim);border-radius:8px;padding:10px 12px;line-height:1.6">
+        <strong style="display:block;color:var(--w);margin-bottom:4px">Skill Level Scale:</strong>
+        1. I've just started playing badminton<br>
+        2. I've played a couple of times but I'm unfamiliar with the rules<br>
+        3. I've got a pretty decent hold of the game<br>
+        4. I've been consistently playing for the past few months<br>
+        5. I've previously played in competitive settings
+      </div>
       <select id="suLevel" class="field" required><option value="" selected disabled>Select your level (1–5)</option><option value="1">1 — Beginner</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5 — Advanced</option></select>
       <input id="suPhone" class="field" type="tel" placeholder="Phone number" required>
       <button id="suSubmitBtn" type="button" class="btn gold" style="width:100%">Sign Up</button>
