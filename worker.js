@@ -1,5 +1,10 @@
 export default {
   async fetch(request, env) {
+    const url = new URL(request.url);
+    if (url.pathname === '/api/notify-signup' && request.method === 'POST') {
+      return handleSignupNotify(request, env);
+    }
+
     const response = await env.ASSETS.fetch(request);
     const type = response.headers.get('content-type') || '';
     if (!type.includes('text/html')) return response;
@@ -67,3 +72,48 @@ setInterval(loop,800);if(document.readyState==='loading')document.addEventListen
     return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers });
   }
 };
+
+async function handleSignupNotify(request, env) {
+  if (!env.RESEND_API_KEY) return new Response('not configured', { status: 500 });
+  if (!env.SIGNUP_WEBHOOK_SECRET || request.headers.get('x-webhook-secret') !== env.SIGNUP_WEBHOOK_SECRET) {
+    return new Response('unauthorized', { status: 401 });
+  }
+  let payload;
+  try {
+    payload = await request.json();
+  } catch (e) {
+    return new Response('bad json', { status: 400 });
+  }
+  const p = payload.record || payload || {};
+  const name = esc(p.full_name || p.name || 'Someone');
+  const phone = esc(p.phone || '—');
+  const level = p.level != null ? esc(String(p.level)) : '—';
+  const dateJoined = esc(p.date_joined || '—');
+  const html = `<div style="font-family:Arial,sans-serif;max-width:560px;color:#211F1B">
+    <h2 style="color:#1F4B3F">New Ladies Badminton Sign-Up 🏸</h2>
+    <p><strong>Name:</strong> ${name}<br>
+    <strong>Phone:</strong> ${phone}<br>
+    <strong>Level:</strong> ${level} / 5<br>
+    <strong>Date joined:</strong> ${dateJoined}</p>
+    <p style="color:#776867;font-size:12px">Sent automatically from ladies-badminton.lujane.workers.dev</p>
+  </div>`;
+  const resp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: env.FROM_EMAIL || 'Ladies Badminton <updates@4dasistas.ca>',
+      to: [env.NOTIFY_EMAIL || 'info@4dasistas.ca'],
+      subject: `New sign-up: ${p.full_name || p.name || 'Someone'}`,
+      html,
+    }),
+  });
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => '');
+    return new Response('resend error: ' + text, { status: 502 });
+  }
+  return new Response('ok');
+}
+
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
