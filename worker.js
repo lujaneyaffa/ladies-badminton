@@ -101,7 +101,7 @@ async function handleSignupNotify(request, env) {
     method: 'POST',
     headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: env.FROM_EMAIL || 'Ladies Badminton <updates@4dasistas.ca>',
+      from: env.FROM_EMAIL || 'Ladies Badminton <onboarding@resend.dev>',
       to: [env.NOTIFY_EMAIL || 'info@4dasistas.ca'],
       subject: `New sign-up: ${p.full_name || p.name || 'Someone'}`,
       html,
