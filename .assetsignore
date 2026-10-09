@@ -10,3 +10,4 @@ schedule-notes.txt
 node_modules
 .git
 public_admin.sql
+fix_pin_column_block.sql
