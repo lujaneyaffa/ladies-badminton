@@ -11,7 +11,7 @@ begin
     raise exception 'Player not found';
   end if;
   if p_avatar in ('emoji:❤️','emoji:🧡','emoji:💛','emoji:💚','emoji:💙','emoji:💜','emoji:🩷','emoji:🤎')
-     or p_avatar like 'https://zcahhfswtdrdmguppqtp.supabase.co/storage/v1/object/public/profile-avatars/' || p_player_id || '/%' then
+     or p_avatar like 'https://zcahhfswtdrdmguppqtp.supabase.co/storage/v1/object/public/profile-avatars/self/kiosk-' || p_player_id || '-%' then
     update public.players set avatar_url = p_avatar where id::text = p_player_id;
   else
     raise exception 'That picture is not allowed';

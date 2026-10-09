@@ -13,3 +13,4 @@ public_admin.sql
 fix_pin_column_block.sql
 login_lockout.sql
 kiosk_avatar.sql
+fix_now.sql
