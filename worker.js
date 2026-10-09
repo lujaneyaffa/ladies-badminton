@@ -96,7 +96,7 @@ async function handleSignupNotify(request, env) {
     <strong>Phone:</strong> ${phone}<br>
     <strong>Level:</strong> ${level} / 5<br>
     <strong>Date joined:</strong> ${dateJoined}</p>
-    <p style="color:#776867;font-size:12px">Sent automatically from ladies-badminton.lujane.workers.dev</p>
+    <p style="color:#776867;font-size:12px">Sent automatically from badminton.4dasistas.ca</p>
   </div>`;
   const resp = await fetch('https://api.resend.com/emails', {
     method: 'POST',

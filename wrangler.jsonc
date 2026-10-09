@@ -3,6 +3,10 @@
   "name": "ladies-badminton",
   "main": "./worker.js",
   "compatibility_date": "2026-08-20",
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "badminton.4dasistas.ca", "custom_domain": true }
+  ],
   "assets": {
     "directory": ".",
     "binding": "ASSETS",

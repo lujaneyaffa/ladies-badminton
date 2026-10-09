@@ -5,3 +5,7 @@ _schedule_update_marker.txt
 _tmp.txt
 _branch_trigger.txt
 schedule-notes.txt
+.wrangler
+.claude
+node_modules
+.git
