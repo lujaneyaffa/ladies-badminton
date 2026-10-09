@@ -9,3 +9,4 @@ schedule-notes.txt
 .claude
 node_modules
 .git
+public_admin.sql
