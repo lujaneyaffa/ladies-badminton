@@ -39,8 +39,11 @@
 .k-title{font:700 40px Georgia,serif;color:var(--w)}.k-sub{font-size:21px;color:var(--muted);margin-top:6px}
 .k-muted{color:var(--muted)}.k-err{color:#c00;font-size:19px;min-height:24px;text-align:center}.k-hint{font-size:16px;color:var(--muted);margin:-4px 0 4px}
 .k-bigs{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:10px 0 22px}
-.k-big{min-height:230px;border:0;border-radius:28px;font-weight:700;font-size:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;line-height:1.15;padding:18px}
-.k-big small{font-size:21px;font-weight:600;opacity:.85}.k-ico{font-size:68px;line-height:1}
+.k-big{min-height:clamp(300px,44vh,480px);border:0;border-radius:32px;font-weight:700;font-size:clamp(44px,6vw,64px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;line-height:1.15;padding:18px}
+.k-big small{font-size:clamp(22px,2.6vw,30px);font-weight:600;opacity:.85}.k-ico{font-size:clamp(90px,12vw,140px);line-height:1}
+.k-games{margin-top:14px}.k-gl-list{margin-top:10px;display:flex;flex-direction:column;gap:8px}.k-gr{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;background:var(--g);border-radius:14px;padding:12px 16px;font-size:20px}.k-gw{font-weight:700;color:var(--green,#2a7a4a)}.k-gs{font-weight:800;color:var(--brown);white-space:nowrap}.k-gl{text-align:right;color:var(--muted)}
+.k-endbtn{width:100%;margin-top:16px;min-height:72px;flex:none}
+.k-lb{display:flex;flex-direction:column;gap:10px;margin:6px 0 16px}.k-lbr{display:grid;grid-template-columns:56px 1fr auto auto;gap:14px;align-items:center;background:var(--d);border:2px solid var(--dim);border-radius:18px;padding:14px 18px;font-size:24px;font-weight:700}.k-lbr.k-top{background:var(--blush);border-color:var(--rose)}.k-rk{font-size:30px;text-align:center}.k-lw{font-size:19px;color:var(--muted);font-weight:600}.k-lp{color:var(--brown);font-weight:800}
 .k-b1{background:var(--rose);color:var(--brown)}.k-b2{background:var(--brown);color:var(--g)}
 .k-here{background:var(--d);border:1px solid var(--dim);border-radius:20px;padding:16px 18px;font-size:19px}
 .k-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.k-chip{background:var(--blush);color:var(--brown);border-radius:999px;padding:8px 16px;font-size:18px;font-weight:600}
@@ -287,22 +290,29 @@ const kSetKey=v=>{try{if(v)localStorage.setItem(KIOSK_STORE,v);else localStorage
 const kRoster=()=>players.filter(p=>p.active!==false).sort((a,b)=>name(a).localeCompare(name(b)));
 const kHere=()=>{const d=dateKey();return new Set(attendance.filter(a=>a.session_date===d&&a.present).map(a=>a.player_id))};
 const kFirst=p=>name(p).split(/\s+/)[0];
+const kToday=()=>{const d=dateKey();return games.filter(g=>localDate(gt(g))===d).sort((a,b)=>gt(a)-gt(b))};
+const kNm=v=>{const p=fp(v);return p?name(p):String(v)};
+function kBoard(){const by={};kToday().forEach(g=>{const pt=points(g),w=gw(g).map(v=>{const p=fp(v);return p?p.id:'x:'+v}),all=gp(g).map(v=>{const p=fp(v);return p?p.id:'x:'+v});all.forEach((id,i)=>{const o=by[id]||(by[id]={id,nm:kNm(gp(g)[i]),w:0,g:0,pts:0});const won=w.includes(id);o.g++;if(won){o.w++;o.pts+=pt.w}else o.pts+=pt.l})});return Object.values(by).sort((a,b)=>(b.pts-a.pts)||(b.w-a.w)||(a.g-b.g)||a.nm.localeCompare(b.nm))}
 const kPlayer=id=>players.find(p=>p.id===id);
 const kAv=p=>'<span class="k-av">'+(p.avatar_url?'<img src="'+esc(p.avatar_url)+'" alt="">':heartFor(p.id))+'</span>';
-const kSig=()=>kRoster().map(p=>p.id).join(',')+'|'+[...kHere()].sort().join(',');
+const kSig=()=>kRoster().map(p=>p.id).join(',')+'|'+[...kHere()].sort().join(',')+'|'+kToday().length;
 function kFriendly(m){m=String(m||'');if(/Failed to fetch|NetworkError|Load failed|network/i.test(m))return 'No internet connection right now. Nothing was saved, so please try again.';if(/schema cache|Could not find the function/i.test(m))return 'Kiosk mode is not switched on in the database yet. Ask the admin.';return m||'Something went wrong. Please try again.'}
 async function kRpc(fn,args){try{const q=await db.rpc(fn,args);return q.error?{error:q.error}:{data:q.data}}catch(e){return {error:{message:e&&e.message?e.message:String(e)}}}}
 function kFail(err,back){kS.busy=false;const m=String(err&&err.message||'');if(/not set up as the kiosk/i.test(m)){kSetKey('');kS.err='This iPad needs to be set up again.';kS.screen='setup';return kRender()}kS.err=kFriendly(m);kS.back=back||'home';kS.screen='error';kRender()}
 function kAuto(screen,ms){clearTimeout(kAutoT);kAutoT=setTimeout(()=>{if(kS.screen!==screen&&!['checked','done','undone','cantundo'].includes(kS.screen))return;kReset();kS.screen='home';kRender()},ms)}
 function kReset(){kS.winners=[];kS.losers=[];kS.ws=21;kS.ls=null;kS.showAll=false;kS.busy=false;kS.err='';kS.who=null;kS.form={name:'',phone:'',level:'',pin:''}}
 function kTile(p,cls,badge){return '<button type="button" class="k-tile'+(cls?' '+cls:'')+'" data-k="pick" data-id="'+esc(p.id)+'">'+kAv(p)+'<span class="k-name">'+esc(name(p))+'</span>'+(badge?'<span class="k-badge">'+badge+'</span>':'')+'</button>'}
+function kGamesHtml(){const gs=kToday();const rows=gs.slice().reverse().map(g=>{const t=a=>a.map(kNm).map(n=>esc(n)).join(' &amp; ');return '<div class="k-gr"><span class="k-gw">'+t(gw(g))+'</span><span class="k-gs">'+esc(g.winner_score)+' – '+esc(g.loser_score)+'</span><span class="k-gl">'+t(arr(g.losers))+'</span></div>'}).join('');return '<div class="k-here k-games"><b>Games recorded so far: '+gs.length+'</b>'+(rows?'<div class="k-gl-list">'+rows+'</div>':'<div class="k-muted" style="margin-top:8px">No games yet tonight.</div>')+'</div><button type="button" class="k-btn k-ghost k-endbtn" data-k="end1">'+(gamesEndedToday()?'🏆 Tonight\'s leaderboard':'🏁 End today\'s game session')+'</button>'}
 function kBar(back,next,label,off){return '<div class="k-bar">'+(back?'<button type="button" class="k-btn k-ghost" data-k="'+back+'">← Back</button>':'')+(next?'<button type="button" class="k-btn k-main" data-k="'+next+'"'+(off?' disabled':'')+'>'+label+'</button>':'')+'</div>'}
 function kHead(title,sub,step){return '<div class="k-head">'+(step?'<div class="k-step">'+step+'</div>':'')+'<div class="k-title" data-k="brand">'+title+'</div>'+(sub?'<div class="k-sub">'+sub+'</div>':'')+'</div>'}
 function kTeam(ids){return ids.map(id=>{const p=kPlayer(id);return p?esc(name(p)):'?'}).join(' + ')}
 function kHtml(){
   const s=kS.screen,here=kHere();
   if(s==='setup')return kHead('Set up this iPad','Ask the admin for the Kiosk Key and type it in once.')+'<div class="k-form"><input id="kKeyIn" class="k-input" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"><div class="k-err">'+esc(kS.err)+'</div><button type="button" class="k-btn k-main" data-k="savekey">Save</button></div>';
-  if(s==='home'){const names=kRoster().filter(p=>here.has(p.id));return kHead('Welcome! 🏸',new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}))+'<div class="k-bigs"><button type="button" class="k-big k-b1" data-k="go-checkin"><span class="k-ico">✅</span><span>I\'m here</span><small>Tap to check in</small></button><button type="button" class="k-big k-b2" data-k="go-game"><span class="k-ico">🏸</span><span>Record a game</span><small>After you finish playing</small></button></div><div class="k-here"><b>Here tonight: '+names.length+'</b><div class="k-chips">'+(names.length?names.map(p=>'<span class="k-chip">'+esc(name(p))+'</span>').join(''):'<span class="k-muted">Nobody yet — be the first!</span>')+'</div></div>'}
+  if(s==='home'){const names=kRoster().filter(p=>here.has(p.id));return kHead('Welcome! 🏸',new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}))+'<div class="k-bigs"><button type="button" class="k-big k-b1" data-k="go-checkin"><span class="k-ico">✅</span><span>I\'m here</span><small>Tap to check in</small></button><button type="button" class="k-big k-b2" data-k="go-game"><span class="k-ico">🏸</span><span>Record a game</span><small>After you finish playing</small></button></div><div class="k-here"><b>Here tonight: '+names.length+'</b><div class="k-chips">'+(names.length?names.map(p=>'<span class="k-chip">'+esc(name(p))+'</span>').join(''):'<span class="k-muted">Nobody yet — be the first!</span>')+'</div></div>'+kGamesHtml()}
+  if(s==='end1')return '<div class="k-center"><div class="k-msg">End today\'s game session?</div><div class="k-sub">'+kToday().length+' game'+(kToday().length===1?'':'s')+' recorded tonight.</div><div class="k-row"><button type="button" class="k-btn k-ghost" data-k="home">No, go back</button><button type="button" class="k-btn k-main" data-k="end2">Yes, end it</button></div></div>';
+  if(s==='end2')return '<div class="k-center"><div class="k-msg">Are you sure?</div><div class="k-sub">This closes tonight\'s games and shows the final leaderboard.</div><div class="k-row"><button type="button" class="k-btn k-ghost" data-k="home">No, keep playing</button><button type="button" class="k-btn k-main" data-k="end3">Yes, I\'m sure</button></div></div>';
+  if(s==='dayboard'){const b=kBoard();return kHead('Tonight\'s leaderboard 🏆',new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}))+(b.length?'<div class="k-lb">'+b.map((o,i)=>'<div class="k-lbr'+(i<3?' k-top':'')+'"><span class="k-rk">'+(['🥇','🥈','🥉'][i]||(i+1))+'</span><span class="k-ln">'+esc(o.nm)+'</span><span class="k-lw">'+o.w+'W · '+(o.g-o.w)+'L</span><span class="k-lp">'+fmtPts(o.pts)+' pts</span></div>').join('')+'</div>':'<div class="k-sub" style="text-align:center">No games were recorded tonight.</div>')+'<div class="k-bar"><button type="button" class="k-btn k-main" data-k="home">Done</button></div>'}
   if(s==='checkin'){return kHead('Tap your name','so we know you\'re here')+'<div class="k-grid">'+kRoster().map(p=>kTile(p,here.has(p.id)?'k-done':'',here.has(p.id)?'✓':'')).join('')+'<button type="button" class="k-tile k-new" data-k="new"><span class="k-av">➕</span><span class="k-name">I\'m new here</span></button></div>'+kBar('home')}
   if(s==='working'||s==='saving')return '<div class="k-center"><div class="k-spin"></div><div class="k-msg">'+esc(s==='saving'?'Saving your game…':kS.msg)+'</div></div>';
   if(s==='checked'){const p=kPlayer(kS.who);return '<div class="k-center"><div class="k-okc">✓</div><div class="k-msg">Hi, '+esc(p?kFirst(p):'there')+'!</div><div class="k-sub">You\'re checked in. Have a great game 🏸</div><button type="button" class="k-btn k-main" data-k="home">OK</button></div>'}
@@ -342,6 +352,9 @@ async function kClick(e){
     case 'brand':{const now=Date.now();kS.taps=(now-kS.tapAt<4000)?kS.taps+1:1;kS.tapAt=now;if(kS.taps>=5){kS.taps=0;kS.adminOk=false;kS.err='';go('admin')}break}
     case 'home':kReset();go('home');break;
     case 'go-checkin':go('checkin');break;
+    case 'end1':if(gamesEndedToday())go('dayboard');else go('end1');break;
+    case 'end2':go('end2');break;
+    case 'end3':setGamesEnded(true);try{schedule()}catch(e){}go('dayboard');break;
     case 'go-game':kReset();go('win');break;
     case 'pick':{
       if(kS.screen==='checkin')return kCheckIn(id);
@@ -373,7 +386,7 @@ async function kClick(e){
   }
 }
 function kNorm(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
-function kioskInit(){const root=$('kioskRoot');if(!root)return;root.addEventListener('click',kClick);root.addEventListener('input',e=>{if(e.target.id==='kfName'||e.target.id==='kfPhone'||e.target.id==='kfPin')kReadForm()});setInterval(()=>{if(viewFromHash()!=='kiosk'||document.hidden||kS.busy)return;load()},15000);setInterval(()=>{if(viewFromHash()!=='kiosk'||kS.busy)return;if(!['home','setup','working','saving'].includes(kS.screen)&&Date.now()-kIdle>90000){kReset();kS.screen=kKey()?'home':'setup';kRender()}},5000)}
+function kioskInit(){const root=$('kioskRoot');if(!root)return;root.addEventListener('click',kClick);root.addEventListener('input',e=>{if(e.target.id==='kfName'||e.target.id==='kfPhone'||e.target.id==='kfPin')kReadForm()});setInterval(()=>{if(viewFromHash()!=='kiosk'||document.hidden||kS.busy)return;load()},15000);setInterval(()=>{if(viewFromHash()!=='kiosk'||kS.busy)return;if(!['home','setup','working','saving','dayboard'].includes(kS.screen)&&Date.now()-kIdle>90000){kReset();kS.screen=kKey()?'home':'setup';kRender()}},5000)}
 
 async function init(){const s=await db.auth.getSession();session=s.data?.session||null;bind();kioskInit();$('attDate').value=dateKey();schedule();renderScheduleCompact();setInterval(schedule,1000);await load()}
 init();
