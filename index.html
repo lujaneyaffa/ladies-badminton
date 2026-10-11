@@ -180,6 +180,23 @@ let _ac=null;function acx(){try{if(!_ac){const C=window.AudioContext||window.web
 document.addEventListener('pointerdown',acx,{passive:true});document.addEventListener('touchend',acx,{passive:true});
 const SFX={checkin:[[880,0,.14],[1319,.11,.26]],welcome:[[523,0,.16],[659,.12,.16],[784,.24,.16],[1047,.36,.4]],game:[[659,0,.14],[784,.12,.14],[988,.24,.14],[1319,.36,.45]],reveal:[[392,0,.18,'triangle'],[523,.18,.18,'triangle'],[659,.36,.18,'triangle'],[784,.54,.18,'triangle'],[1047,.76,.7,'triangle'],[1319,.76,.7,'sine']]};
 function sfx(n){try{const c=acx();if(!c)return;const now=c.currentTime+.03;(SFX[n]||[]).forEach(([f,t,d,ty])=>{const o=c.createOscillator(),g=c.createGain();o.type=ty||'sine';o.frequency.value=f;g.gain.setValueAtTime(0.0001,now+t);g.gain.exponentialRampToValueAtTime(.28,now+t+.02);g.gain.exponentialRampToValueAtTime(.0001,now+t+d);o.connect(g);g.connect(c.destination);o.start(now+t);o.stop(now+t+d+.05)})}catch(e){}}
+/* WHAT'S NEW: every time we ship something, add a new entry at the TOP of CHANGELOG (n = previous n + 1).
+   It pops up once for every signed-in person (players, admins, leaders) until they tap "Got it". */
+const CHANGELOG=[{n:1,date:'Oct 11, 2026',added:[
+'New season points: 10 for showing up, +1 for every game you play, plus your side\'s real score (win 21–19 = 21 each, loss = 19 each)',
+'iPad kiosk: tap your name to check in (tap again to undo), record games in 3 steps, and end the night with a podium',
+'Photo or heart colour prompt at check-in, plus fun sounds',
+'"Coming?" box so you can RSVP Yes / Maybe / No for each week',
+'Admins: Standings and Games recorded (with exact times) on the This Season page',
+'Two admin logins: Public admin (today only, no deleting) and Owner admin',
+'Phone number fields now open the number keypad, and pages fill the iPad screen'],
+fixed:[
+'Last season\'s points no longer show up this season (they stay in the Archive)',
+'Footer logos are balanced, and the WhatsApp icon is back',
+'iPad photo upload errors fixed']}];
+function updSeen(){try{return Number(localStorage.getItem('seen_update')||0)}catch(e){return 0}}
+function showUpdate(){const u=CHANGELOG[0];if(!u)return;const li=a=>a.map(t=>'<li style="margin:7px 0">'+esc(t)+'</li>').join('');openModal('<div style="text-align:center"><div style="font-size:34px">✨</div><h2 style="margin:6px 0 2px">What\'s new ✨</h2><div class="muted" style="font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px">Update #'+u.n+' · '+esc(u.date)+'</div></div><div style="text-align:left;margin-top:16px;line-height:1.45"><div style="font-weight:800;color:var(--brown)">✨ Added</div><ul style="margin:6px 0 14px;padding-left:20px">'+li(u.added)+'</ul>'+(u.fixed&&u.fixed.length?'<div style="font-weight:800;color:var(--brown)">✨ Fixed</div><ul style="margin:6px 0 0;padding-left:20px">'+li(u.fixed)+'</ul>':'')+'</div><button id="updGot" type="button" class="btn gold" style="width:100%;margin-top:18px;padding:14px;font-size:15px">Got it ✨</button>');$('updGot').onclick=()=>{try{localStorage.setItem('seen_update',String(u.n))}catch(e){}closeModal()}}
+setInterval(()=>{try{if(!CHANGELOG[0]||updSeen()>=CHANGELOG[0].n||viewFromHash()==='kiosk')return;if($('modal').classList.contains('show'))return;const me=!!(myAuth&&players.find(x=>x.username===myAuth.username));if(!(adm()||me))return;showUpdate()}catch(e){}},2500);
 function toast(m){const t=document.createElement('div');t.textContent=m;t.style.cssText='position:fixed;z-index:100;bottom:18px;left:50%;transform:translateX(-50%);background:#76220b;color:#fef7f4;font-weight:700;padding:10px 16px;border-radius:20px;max-width:90%;text-align:center';document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
 function arr(v){if(Array.isArray(v))return v;try{const j=JSON.parse(v);return Array.isArray(j)?j:[]}catch(e){return typeof v==='string'?v.split(',').map(x=>x.trim()).filter(Boolean):[]}}
 function fp(v){return players.find(p=>matchesPlayer(v,p))}
